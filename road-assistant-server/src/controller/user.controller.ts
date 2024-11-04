@@ -11,6 +11,6 @@ export class UserController {
 
   @Get()
   getToken(): string {
-    return 'Ya pedik!';
+    return '';
   }
 }

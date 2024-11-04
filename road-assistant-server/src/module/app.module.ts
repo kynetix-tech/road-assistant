@@ -22,7 +22,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
         configService.get<DatabaseConfig>('db'),
     }),
     AuthModule,
-    UserModule
+    UserModule,
   ],
   controllers: [AppController],
   providers: [AppService],
