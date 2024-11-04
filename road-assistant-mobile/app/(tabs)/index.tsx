@@ -1,52 +1,53 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import {Alert, Button, StyleSheet, Text, View} from 'react-native';
+import {useAuth0, Auth0Provider} from 'react-native-auth0';
+import config from '@/config/auth0-config';
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+const Home = () => {
+  const {authorize, clearSession, user, error, getCredentials, isLoading} = useAuth0();
+
+  const onLogin = async () => {
+    try {
+      await authorize();
+      let credentials = await getCredentials();
+      Alert.alert('AccessToken: ' + credentials?.accessToken);
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  const loggedIn = user !== undefined && user !== null;
+
+  const onLogout = async () => {
+    try {
+      await clearSession();
+    } catch (e) {
+      console.log('Log out cancelled');
+    }
+  };
+
+  if (isLoading) {
+    return <View style={styles.container}><Text>Loading</Text></View>;
+  }
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.header}> Auth0Sample - Login </Text>
+      {user && <Text>You are logged in as {user.name}</Text>}
+      {!user && <Text>You are not logged in</Text>}
+      {error && <Text>{error.message}</Text>}
+      <Button
+        onPress={loggedIn ? onLogout : onLogin}
+        title={loggedIn ? 'Log Out' : 'Log In'}
+      />
+    </View>
+  );
+};
 
 export default function HomeScreen() {
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Well!!!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({ ios: 'cmd + d', android: 'cmd + mM' })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <Auth0Provider domain={config.domain} clientId={config.clientId}>
+      <Home />
+    </Auth0Provider>
   );
 }
 
@@ -56,15 +57,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F5FCFF',
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  header: {
+    fontSize: 20,
+    textAlign: 'center',
+    margin: 10,
   },
 });

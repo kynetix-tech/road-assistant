@@ -111,6 +111,9 @@ android {
 
     namespace 'com.maksgovor.roadassistant'
     defaultConfig {
+// @generated begin react-native-auth0-manifest-placeholder - expo prebuild (DO NOT MODIFY) sync-971735a2780e087c61c8f614121d1e7f5ead9824
+manifestPlaceholders = [auth0Domain: "dev-vip84t2vaeu5hv4b.us.auth0.com", auth0Scheme: "com.maksgovor.roadassistant.auth0"]
+// @generated end react-native-auth0-manifest-placeholder
         applicationId 'com.maksgovor.roadassistant'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
