@@ -24,7 +24,7 @@ export const configuration = () => ({
   },
   swagger: {
     openapi: '3.0.0',
-    title: 'adc-ua API',
+    title: 'RA API',
     version: '0.1.0',
     license: {
       name: 'MIT',

@@ -3,7 +3,6 @@ import { configuration } from '@/config/configuration';
 import { DatabaseConfig } from '@/config/interface';
 import { AppController } from '@/controller/app.controller';
 import { UserModule } from '@/module/user.module';
-import { AppService } from '@/service/app.service';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -25,6 +24,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     UserModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [],
 })
 export class AppModule {}
