@@ -1,4 +1,4 @@
-import { join, resolve } from 'path';
+import { join } from 'path';
 
 export const configuration = () => ({
   port: 8080,

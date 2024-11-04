@@ -7,8 +7,14 @@ const Home = () => {
 
   const onLogin = async () => {
     try {
-      await authorize();
+      await authorize(
+        {
+          audience: config.audience,
+          scope: 'openid profile email'
+        }
+      );
       let credentials = await getCredentials();
+      console.log(credentials?.accessToken)
       Alert.alert('AccessToken: ' + credentials?.accessToken);
     } catch (e) {
       console.log(e);
