@@ -1,9 +1,12 @@
 import {Alert, Button, StyleSheet, Text, View} from 'react-native';
 import {useAuth0, Auth0Provider} from 'react-native-auth0';
 import config from '@/config/auth0-config';
+import { useApiTokenResolver } from '@/hooks/useApiTokenResolver';
+import { AppService, OpenAPI } from '@/service/Api';
 
 const Home = () => {
-  const {authorize, clearSession, user, error, getCredentials, isLoading} = useAuth0();
+  useApiTokenResolver()
+  const {authorize, clearSession, user, error, getCredentials, isLoading } = useAuth0();
 
   const onLogin = async () => {
     try {
@@ -44,6 +47,11 @@ const Home = () => {
       <Button
         onPress={loggedIn ? onLogout : onLogin}
         title={loggedIn ? 'Log Out' : 'Log In'}
+      />
+      <Button 
+        // onPress={() => fetch('http://10.0.2.2:8080/public').then(console.log)}
+        onPress={() => AppService.getPrivate().then(console.log)}
+        title='Test'
       />
     </View>
   );

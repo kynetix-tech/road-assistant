@@ -8,13 +8,13 @@ export class AppController {
 
   @Get('public')
   getPublic(): string {
-    return '';
+    return 'public';
   }
 
   @Get('private')
   @ApiBearerAuth('authorization')
   @UseGuards(AuthGuard('jwt'))
   getPrivate(): string {
-    return '';
+    return 'private';
   }
 }
