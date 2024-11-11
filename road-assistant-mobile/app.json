@@ -34,6 +34,14 @@
         {
           "domain": "dev-vip84t2vaeu5hv4b.us.auth0.com"
         }
+      ], 
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera",
+          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone",
+          "recordAudioAndroid": true
+        }
       ]
     ],
     "experiments": {

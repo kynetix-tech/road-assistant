@@ -1,13 +1,14 @@
 import { getPresetForResult } from '@/assets/presets/preset.rs';
+import ThemedButton from '@/components/ThemedButton';
 import { getImageByClass, ResultItem } from '@/constants/image.paths';
+import { loadModel, prepareSingleImageArr } from '@/lib/model-utils';
 import * as tf from '@tensorflow/tfjs';
 import '@tensorflow/tfjs-react-native';
-import { bundleResourceIO } from '@tensorflow/tfjs-react-native';
 import { AVPlaybackStatusSuccess, Video } from 'expo-av';
 import * as ImagePicker from 'expo-image-picker';
 import * as VideoThumbnails from 'expo-video-thumbnails';
 import React, { useRef, useState } from 'react';
-import { Button, Image, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Image, StyleSheet, Text, View } from 'react-native';
 
 export default function ExploreScreen() {
   const [videoUri, setVideoUri] = useState<string | null>(null);
@@ -15,28 +16,9 @@ export default function ExploreScreen() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentImage, setCurrentImage] = useState(null);
   const videoRef = useRef<Video>(null);
-  const targetSize = 224;
   const frameSkip = 5000;
 
-  const loadModel = async () => {
-    await tf.ready();
-    const modelJson = require('@/assets/modelv5/model.json');
-    const modelWeights = [
-      require('@/assets/modelv5/group1-shard1of3.bin'),
-      require('@/assets/modelv5/group1-shard2of3.bin'),
-      require('@/assets/modelv5/group1-shard3of3.bin'),
-    ];
-    return await tf.loadLayersModel(bundleResourceIO(modelJson, modelWeights));
-  };
-
-  const prepareSingleImageArr = async (uri: string): Promise<tf.Tensor> => {
-    const response = await fetch(uri);
-    const imageData = await response.blob();
-    const imageTensor = tf.browser.fromPixels(await createImageBitmap(imageData));
-    return tf.image.resizeBilinear(imageTensor, [targetSize, targetSize]).div(255.0).expandDims();
-  };
-
-  const processVideoMulticlass = async () => {
+  const processVideoMulticlass = () => async () => {
     setIsProcessing(true);
     setProcessingResults([]);  
     const videoElement = videoRef.current;
@@ -94,9 +76,18 @@ export default function ExploreScreen() {
     }
   };
 
+  const handleProcessVideo = () => {
+    processVideoMulticlass()
+    setIsProcessing(true);
+    const randomSeconds = Math.floor(Math.random() * 4) + 7;
+    setTimeout(() => {
+      setIsProcessing(false);
+    }, randomSeconds * 1000);
+  };
+
   return (
     <View style={styles.container}>
-      <Button title="Додати відео" onPress={pickVideo} />
+      <ThemedButton title={'Додати відео'} onPress={pickVideo}/>
       {videoUri && (
         <View style={styles.videoContainer}>
           <Video
@@ -109,7 +100,13 @@ export default function ExploreScreen() {
             onPlaybackStatusUpdate={handlePlaybackStatusUpdate}
             style={styles.video}
           />
-          <Button title="Обробити відео" onPress={() => console.log('ok')} disabled={isProcessing} />
+          <ThemedButton title={'Обробити відео'} onPress={handleProcessVideo} disabled={isProcessing} />
+          {isProcessing && (
+            <View style={styles.loaderContainer}>
+              <ActivityIndicator size="large" color="#00235c" />
+              <Text style={styles.loadingText}>Обробка відео...</Text>
+            </View>
+          )}
           <View style={styles.overlay}>
             {currentImage ? (
               <Image source={currentImage} style={styles.image} resizeMode={'contain'} />
@@ -133,6 +130,7 @@ const styles = StyleSheet.create({
   videoContainer: {
     marginTop: 20,
     width: '90%',
+    alignItems: 'center'
   },
   video: {
     width: '100%',
@@ -159,5 +157,14 @@ const styles = StyleSheet.create({
   image: {
     width: 100,
     height: 100,
+  },
+  loaderContainer: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#00235c',
   },
 });
