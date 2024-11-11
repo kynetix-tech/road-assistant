@@ -51,3 +51,5 @@ export const imageClasses = new Map(Object.entries({
 }))
 
 export const getImageByClass = (classId: number) => imageClasses.get(classId.toString());
+
+export const commentImagePng = require('@/assets/images/comment.png')

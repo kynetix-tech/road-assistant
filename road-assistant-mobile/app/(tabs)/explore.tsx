@@ -113,8 +113,8 @@ export default function ExploreScreen() {
             ) : (
               <Text style={styles.noImageText}>No image for this time</Text> // Може бути пусто або текст
             )}
-      </View>
         </View>
+      </View>
       )}
     </View>
   );

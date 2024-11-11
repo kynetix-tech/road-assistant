@@ -4,8 +4,15 @@ import { loadModel, prepareSingleImageArr } from '@/lib/model-utils';
 import * as tf from '@tensorflow/tfjs';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as Location from 'expo-location';
+import { Accelerometer, Gyroscope } from 'expo-sensors';
 import { useEffect, useRef, useState } from 'react';
 import { Alert, Button, Image, StyleSheet, Text, View } from 'react-native';
+
+export interface AccelGyroData {
+  x: number;
+  y: number;
+  z: number;
+}
 
 export default function RealTimeRecognitionScreen() {
   const [permission, requestPermission] = useCameraPermissions();
@@ -15,6 +22,10 @@ export default function RealTimeRecognitionScreen() {
   const [recognitionData, setRecognitionData] = useState<any[]>([]);
   const [currentClass, setCurrentClass] = useState<number>();
   const cameraRef = useRef<CameraView>(null);
+  
+  const [accelData, setAccelData] = useState<AccelGyroData>({ x: 0, y: 0, z: 0 });
+  const [gyroData, setGyroData] = useState<AccelGyroData>({ x: 0, y: 0, z: 0 });
+  const [movementDescription, setMovementDescription] = useState("Спокійний рух");
 
   useEffect(() => {
     (async () => {
@@ -80,6 +91,47 @@ export default function RealTimeRecognitionScreen() {
     });
   };
 
+  useEffect(() => {
+    // Починаємо отримувати дані з акселерометра
+    const accelSubscription = Accelerometer.addListener(data => {
+      setAccelData(data);
+      detectHarshManeuver(data, gyroData);
+    });
+    // Починаємо отримувати дані з гіроскопа
+    const gyroSubscription = Gyroscope.addListener(data => {
+      setGyroData(data);
+      detectHarshManeuver(accelData, data);
+    });
+
+    // Частота оновлення сенсорів
+    Accelerometer.setUpdateInterval(100); // 100 ms
+    Gyroscope.setUpdateInterval(100); // 100 ms
+
+    // Очищаємо підписку при виході з екрану
+    return () => {
+      accelSubscription.remove();
+      gyroSubscription.remove();
+    };
+  }, [accelData, gyroData]);
+
+  // Функція для визначення різких маневрів
+  function detectHarshManeuver(accel: AccelGyroData, gyro: AccelGyroData) {
+    const accelMagnitude = Math.sqrt(accel.x ** 2 + accel.y ** 2 + accel.z ** 2);
+    const gyroMagnitude = Math.sqrt(gyro.x ** 2 + gyro.y ** 2 + gyro.z ** 2);
+
+    // Порогові значення для різких маневрів
+    const ACCEL_THRESHOLD = 2.3; // наприклад, 2g
+    const GYRO_THRESHOLD = 5.5; // залежить від потрібної чутливості
+
+    if (accelMagnitude > ACCEL_THRESHOLD) {
+      setMovementDescription("Різке прискорення або гальмування");
+      setTimeout(() => setMovementDescription("Спокійний рух"), 2000)
+    } else if (gyroMagnitude > GYRO_THRESHOLD) {
+      setMovementDescription("Різкий поворот");
+      setTimeout(() => setMovementDescription("Спокійний рух"), 2000)
+    }
+  }
+
   if (!permission) {
     return <View />;
   }
@@ -110,6 +162,11 @@ export default function RealTimeRecognitionScreen() {
             <ThemedButton onPress={handleEndTrip} title={'Закінчити поїздку'} />
           )
         }
+      </View>
+      <View style={styles.monitorContainer}>
+        <Text style={styles.text}>Статус: {movementDescription}</Text>
+        <Text>Акселерометр - x: {accelData.x.toFixed(2)} y: {accelData.y.toFixed(2)} z: {accelData.z.toFixed(2)}</Text>
+        <Text>Гіроскоп - x: {gyroData.x.toFixed(2)} y: {gyroData.y.toFixed(2)} z: {gyroData.z.toFixed(2)}</Text>
       </View>
     </View>
   );
@@ -150,4 +207,13 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     alignItems: 'center'
   },
+  monitorContainer: {
+    display: 'flex',
+    alignItems: 'center'
+  },
+  text: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  }
 });
