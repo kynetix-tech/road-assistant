@@ -1,4 +1,5 @@
 import ThemedButton from '@/components/ThemedButton';
+import { getImageByClass } from '@/constants/image.paths';
 import { loadModel, prepareSingleImageArr } from '@/lib/model-utils';
 import * as tf from '@tensorflow/tfjs';
 import { CameraView, useCameraPermissions } from 'expo-camera';
@@ -12,6 +13,7 @@ export default function RealTimeRecognitionScreen() {
   const [location, setLocation] = useState<Location.LocationObject>();
   const [isRecording, setIsRecording] = useState(false);
   const [recognitionData, setRecognitionData] = useState<any[]>([]);
+  const [currentClass, setCurrentClass] = useState<number>();
   const cameraRef = useRef<CameraView>(null);
 
   useEffect(() => {
@@ -41,6 +43,7 @@ export default function RealTimeRecognitionScreen() {
           const detectedClass = predictionData.indexOf(Math.max(...predictionData));
           const currentLocation = await Location.getCurrentPositionAsync({});
           setLocation(currentLocation);
+          setCurrentClass(detectedClass);
           
           if (location) {
             setRecognitionData((prev) => [
@@ -94,7 +97,9 @@ export default function RealTimeRecognitionScreen() {
     <View style={styles.container}>
       <CameraView style={styles.camera} facing="back">
         <View style={styles.overlay}>
-          <Image source={require('@/assets/class-images/4.png')} style={styles.image} resizeMode="contain" />
+          {currentClass === undefined ? 
+          <></> : 
+          <Image source={getImageByClass(currentClass)} style={styles.image} resizeMode="contain" />}
         </View>
       </CameraView>
       <View style={styles.buttonContainer}>
