@@ -1,10 +1,10 @@
 import ThemedButton from '@/components/ThemedButton';
 import config from '@/config/auth0-config';
 import { useApiTokenResolver } from '@/hooks/useApiTokenResolver';
-import { AppService } from '@/service/Api';
+import { AppService, UsersService } from '@/service/Api';
 import { Picker } from '@react-native-picker/picker';
 import React, { useEffect, useState } from 'react';
-import { Button, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Button, Keyboard, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Auth0Provider, useAuth0 } from 'react-native-auth0';
 
 const Home = () => {
@@ -13,15 +13,14 @@ const Home = () => {
   const [email, setEmail] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [gender, setGender] = useState('Інше');
+  const [gender, setGender] = useState('Other');
   const [recognizedSigns, setRecognizedSigns] = useState(0);
   const [commentsAdded, setCommentsAdded] = useState(0);
 
   useEffect(() => {
     if (user) {
       setEmail(user.email || '');
-      setRecognizedSigns(10);
-      setCommentsAdded(5);
+      loadUserData()
     }
   }, [user]);
 
@@ -49,6 +48,19 @@ const Home = () => {
     }
   };
 
+  const loadUserData = async () => {
+    try {
+      const userData = await UsersService.getCurrentUser();
+      setFirstName(userData.firstName);
+      setLastName(userData.lastName);
+      setGender(userData.gender);
+      setRecognizedSigns(userData.rating.recognizedSigns);
+      setCommentsAdded(userData.rating.addedComments);
+    } catch (error) {
+      console.log("Користувач не знайдений або сталася помилка:", error);
+    }
+  };
+
   if (isLoading) {
     return (
       <View style={styles.container}>
@@ -56,6 +68,23 @@ const Home = () => {
       </View>
     );
   }
+
+  const handleSave = async () => {
+    const requestBody = {
+      email,
+      firstName,
+      lastName,
+      gender,
+    };
+    try {
+      await UsersService.upsert(requestBody);
+      Alert.alert('Дані успішно збережені!');
+      Keyboard.dismiss();
+      loadUserData();
+    } catch (error) {
+      console.log('Помилка при збереженні даних:', error);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -92,11 +121,16 @@ const Home = () => {
               selectedValue={gender}
               onValueChange={(itemValue) => setGender(itemValue)}
             >
-              <Picker.Item label="Чоловіча" value="Чоловіча" />
-              <Picker.Item label="Жіноча" value="Жіноча" />
-              <Picker.Item label="Інше" value="Інше" />
+              <Picker.Item label="Чоловіча" value="Male" />
+              <Picker.Item label="Жіноча" value="Female" />
+              <Picker.Item label="Інше" value="Other" />
             </Picker>
           </View>
+
+          <ThemedButton
+            onPress={handleSave}
+            title="Зберегти зміни"
+          />
           
           <View style={styles.divider} />
           <Text style={styles.statsHeader}>Ваша статистика</Text>
@@ -149,6 +183,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 10,
     marginBottom: 10,
+    fontWeight: '500'
   },
   picker: {
     height: 55,
