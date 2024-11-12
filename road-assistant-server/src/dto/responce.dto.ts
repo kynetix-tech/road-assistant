@@ -1,3 +1,4 @@
+import { Coordinates, SignItem } from '@/dto/request.dto';
 import { Gender } from '@/entity/user.entity';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -33,4 +34,47 @@ export class UserResponse {
 
   @ApiProperty()
   rating: RatingResponse;
+}
+
+export class CommentResponse {
+  @ApiProperty()
+  id: number;
+
+  @ApiProperty()
+  createdAt: Date;
+
+  @ApiProperty()
+  text: string;
+
+  @ApiProperty()
+  routeId: number;
+
+  @ApiProperty()
+  userId: string;
+
+  @ApiProperty()
+  coordinates: Coordinates;
+}
+
+export class RouteReportResponse {
+  @ApiProperty()
+  id: number;
+
+  @ApiProperty()
+  createdAt: Date;
+
+  @ApiProperty()
+  startPoint: Coordinates;
+
+  @ApiProperty()
+  endPoint: Coordinates;
+
+  @ApiProperty({ isArray: true, type: SignItem })
+  recognizedSigns: Array<SignItem>;
+
+  @ApiProperty()
+  userId: string;
+
+  @ApiProperty({ isArray: true, type: SignItem })
+  comments: Array<CommentResponse>;
 }

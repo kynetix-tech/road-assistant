@@ -3,6 +3,7 @@ import { Coordinates, SignItem } from '@/entity/interface/sign-coord.interface';
 import { UserEntity } from '@/entity/user.entity';
 import {
   Column,
+  CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
@@ -20,6 +21,28 @@ export class RouteEntity {
   })
   text: string;
 
+  @CreateDateColumn({
+    nullable: false,
+    name: 'created_at',
+  })
+  createdAt: Date;
+
+  @Column({
+    type: 'json',
+    default: () => "'{}'",
+    name: 'start_point',
+    nullable: true,
+  })
+  startPoint: Coordinates;
+
+  @Column({
+    type: 'json',
+    default: () => "'{}'",
+    name: 'end_point',
+    nullable: true,
+  })
+  endPoint: Coordinates;
+
   @Column({
     type: 'json',
     default: () => "'[]'",
@@ -27,14 +50,6 @@ export class RouteEntity {
     nullable: true,
   })
   recognizedSigns: Array<SignItem>;
-
-  @Column({
-    type: 'json',
-    default: () => "'[]'",
-    name: 'path_data',
-    nullable: true,
-  })
-  pathData: Array<Coordinates>;
 
   @Column({
     name: 'user_id',

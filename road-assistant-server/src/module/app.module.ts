@@ -2,6 +2,7 @@ import { AuthModule } from '@/auth/auth.module';
 import { configuration } from '@/config/configuration';
 import { DatabaseConfig } from '@/config/interface';
 import { AppController } from '@/controller/app.controller';
+import { RouteModule } from '@/module/route.module';
 import { UserModule } from '@/module/user.module';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -22,6 +23,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     }),
     AuthModule,
     UserModule,
+    RouteModule,
   ],
   controllers: [AppController],
   providers: [],

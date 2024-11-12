@@ -14,3 +14,41 @@ export class UserRegisterRequest {
   @ApiProperty()
   gender: Gender;
 }
+
+export class Coordinates {
+  @ApiProperty()
+  latitude: number;
+
+  @ApiProperty()
+  longtitude: number;
+}
+
+export class SignItem {
+  @ApiProperty()
+  coordinates: Coordinates;
+
+  @ApiProperty()
+  signClass: string;
+}
+
+export class CommentRequest {
+  @ApiProperty()
+  text: string;
+
+  @ApiProperty()
+  coordinates: Coordinates;
+}
+
+export class RouteReportRequest {
+  @ApiProperty()
+  startPoint: Coordinates;
+
+  @ApiProperty()
+  endPoint: Coordinates;
+
+  @ApiProperty({ isArray: true, type: SignItem })
+  recognizedSigns: Array<SignItem>;
+
+  @ApiProperty({ isArray: true, type: CommentRequest })
+  comments: Array<CommentRequest>;
+}
