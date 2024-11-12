@@ -1,16 +1,15 @@
 import { UserEntity } from '@/entity/user.entity';
 import { UserModel } from '@/model/user.model';
+import { RatingRepository } from '@/repository/rating.repository';
 import { Injectable } from '@nestjs/common';
-import { EntityManager, SelectQueryBuilder } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 
 @Injectable()
 export class UserRepository {
-  private queryBuilder: SelectQueryBuilder<UserEntity>;
+  private repository: Repository<UserEntity>;
 
   constructor(private manager: EntityManager) {
-    this.queryBuilder = this.manager
-      .getRepository(UserEntity)
-      .createQueryBuilder('user');
+    this.repository = this.manager.getRepository(UserEntity);
   }
 
   public static toUserModel(userEntity?: UserEntity): UserModel {
@@ -20,19 +19,23 @@ export class UserRepository {
       userEntity.firstName,
       userEntity.lastName,
       userEntity.gender,
+      RatingRepository.toRatingModel(userEntity.rating),
     );
   }
 
   public async getByAuth0Id(auth0Id: string): Promise<UserModel> {
-    const userEntity = await this.queryBuilder
-      .where('auth0_id = :auth0Id', { auth0Id })
+    const userEntity = await this.repository
+      .createQueryBuilder('user')
+      .where('user.auth0_id = :auth0Id', { auth0Id })
+      .leftJoinAndSelect('user.rating', 'rating')
       .getOne();
 
     if (userEntity) return UserRepository.toUserModel(userEntity);
   }
 
   public async register(user: UserModel): Promise<string> {
-    const { raw } = await this.queryBuilder
+    const { raw } = await this.repository
+      .createQueryBuilder()
       .insert()
       .into(UserEntity)
       .values({
@@ -46,5 +49,20 @@ export class UserRepository {
       .execute();
 
     return raw[0].auth0_id;
+  }
+
+  public async update(user: UserModel): Promise<string> {
+    this.repository
+      .createQueryBuilder()
+      .update(UserEntity)
+      .set({
+        firstName: user.firstName,
+        lastName: user.lastName,
+        gender: user.gender,
+      })
+      .where('auth0_id = :auth0Id', { auth0Id: user.id })
+      .execute();
+
+    return user.id;
   }
 }

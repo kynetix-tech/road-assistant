@@ -1,5 +1,6 @@
+import { RatingModel } from '@/model/rating.model';
 import { Injectable } from '@nestjs/common';
-import { UserResponse } from '../dto/responce.dto';
+import { RatingResponse, UserResponse } from '../dto/responce.dto';
 import { UserModel } from '../model/user.model';
 
 @Injectable()
@@ -11,6 +12,16 @@ export class UserFormatter {
       firstName: user.firstName,
       lastName: user.lastName,
       gender: user.gender,
+      rating: this.toUserRatingResponse(user.rating),
+    };
+  }
+
+  public toUserRatingResponse(rating: RatingModel): RatingResponse {
+    return {
+      id: rating.id,
+      userId: rating.userId,
+      recognizedSigns: rating.recognizedSigns,
+      addedComments: rating.addedComments,
     };
   }
 }

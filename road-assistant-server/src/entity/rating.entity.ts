@@ -31,6 +31,7 @@ export class RatingEntity {
 
   @Column({
     name: 'user_id',
+    unique: true,
   })
   userId: string;
 
