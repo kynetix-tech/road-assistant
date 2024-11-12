@@ -1,8 +1,10 @@
 import { ApplicationError } from '@/common/application.error';
 import { RouteReportRequest } from '@/dto/request.dto';
 import { CommentModel } from '@/model/comment.model';
+import { RatingModel } from '@/model/rating.model';
 import { RouteModel } from '@/model/route.model';
 import { CommentRepository } from '@/repository/comment.repository';
+import { RatingRepository } from '@/repository/rating.repository';
 import { RouteRepository } from '@/repository/route.repository';
 import { UserRepository } from '@/repository/user.repository';
 import { Injectable } from '@nestjs/common';
@@ -13,6 +15,7 @@ export class RouteService {
     private readonly commentRepository: CommentRepository,
     private readonly userRepository: UserRepository,
     private readonly routeRepository: RouteRepository,
+    private readonly ratingRepository: RatingRepository
   ) {}
 
   public async addRouteReport(
@@ -33,9 +36,16 @@ export class RouteService {
       auth0Id,
     );
 
-    const routeId = await this.routeRepository.createRoute(routeModel);
+    const ratingModel = new RatingModel(
+      existingUser.rating.recognizedSigns + routeRequest.recognizedSigns.length,
+      existingUser.rating.addedComments + routeRequest.comments.length,
+      existingUser.id
+    )
 
-		if (routeRequest.comments && routeRequest.comments.length > 0) {
+    const routeId = await this.routeRepository.createRoute(routeModel);
+    const ratingUpdatedId = await this.ratingRepository.updateRating(ratingModel);
+
+		if (routeRequest.comments.length > 0) {
 			const commentModels = routeRequest.comments.map((comment) => new CommentModel(
 				comment.text, routeId, auth0Id, comment.coordinates
 			));

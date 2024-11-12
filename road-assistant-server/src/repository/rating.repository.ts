@@ -45,4 +45,19 @@ export class RatingRepository {
 
     return raw[0].id;
   }
+
+  public async updateRating(rating: RatingModel): Promise<number> {
+    const { raw } = await this.repository
+      .createQueryBuilder('rating')
+      .update(RatingEntity)
+      .set({
+        recognizedSigns: rating.recognizedSigns,
+        addedComments: rating.addedComments,
+      })
+      .where('rating.user_id = :userId', { userId: rating.userId })
+      .returning(['id'])
+      .execute()
+
+    return raw[0].id;
+  }
 }
