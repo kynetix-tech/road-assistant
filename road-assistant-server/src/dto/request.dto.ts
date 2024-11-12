@@ -20,7 +20,7 @@ export class Coordinates {
   latitude: number;
 
   @ApiProperty()
-  longtitude: number;
+  longitude: number;
 }
 
 export class SignItem {

@@ -50,6 +50,6 @@ export const imageClasses = new Map(Object.entries({
   '19': require('@/assets/class-images/19.png'),
 }))
 
-export const getImageByClass = (classId: number) => imageClasses.get(classId.toString());
+export const getImageByClass = (classId: number | string) => imageClasses.get(classId.toString());
 
 export const commentImagePng = require('@/assets/images/comment.png')

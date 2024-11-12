@@ -1,10 +1,10 @@
 import ThemedButton from '@/components/ThemedButton';
 import config from '@/config/auth0-config';
 import { useApiTokenResolver } from '@/hooks/useApiTokenResolver';
-import { AppService, UsersService } from '@/service/Api';
+import { UsersService } from '@/service/Api';
 import { Picker } from '@react-native-picker/picker';
 import React, { useEffect, useState } from 'react';
-import { Alert, Button, Keyboard, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Keyboard, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Auth0Provider, useAuth0 } from 'react-native-auth0';
 
 const Home = () => {
@@ -126,12 +126,12 @@ const Home = () => {
               <Picker.Item label="Інше" value="Other" />
             </Picker>
           </View>
-
-          <ThemedButton
-            onPress={handleSave}
-            title="Зберегти зміни"
-          />
-          
+          <View style={styles.centeredContainer}>
+            <ThemedButton
+              onPress={handleSave}
+              title="Зберегти зміни"
+            />
+          </View>                   
           <View style={styles.divider} />
           <Text style={styles.statsHeader}>Ваша статистика</Text>
           <Text>Кількість розпізнаних знаків: {recognizedSigns}</Text>
@@ -142,11 +142,6 @@ const Home = () => {
       <ThemedButton
         onPress={loggedIn ? onLogout : onLogin}
         title={loggedIn ? 'Вийти з системи' : 'Увійти в систему (Зареєструватись)'}
-      />
-
-      <Button
-        onPress={() => AppService.getPrivate().then(console.log)}
-        title="Test"
       />
     </View>
   );
@@ -202,4 +197,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 10,
   },
+  centeredContainer: {
+    display: 'flex',
+    alignItems: 'center'
+  }
 });

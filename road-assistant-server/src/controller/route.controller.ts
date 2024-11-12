@@ -4,17 +4,17 @@ import { RouteReportResponse } from '@/dto/responce.dto';
 import { RouteFormatter } from '@/formatter/route.formatter';
 import { RouteService } from '@/service/route.service';
 import {
-    Body,
-    Controller,
-    Get,
-    HttpCode,
-    HttpStatus,
-    Post,
-    Req,
-    UseGuards,
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Route')
 @ApiBearerAuth('authorization')
@@ -39,6 +39,8 @@ export class RouteController {
   }
 
   @Get('routes')
+  @HttpCode(HttpStatus.OK)
+  @ApiResponse({ status: HttpStatus.OK, type: RouteReportResponse, isArray: true })
   public async getRoutesForUser(
     @Req() { user }: RequestWithAuth,
   ) :Promise<Array<RouteReportResponse>> {

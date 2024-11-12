@@ -75,6 +75,6 @@ export class RouteReportResponse {
   @ApiProperty()
   userId: string;
 
-  @ApiProperty({ isArray: true, type: SignItem })
+  @ApiProperty({ isArray: true, type: CommentResponse })
   comments: Array<CommentResponse>;
 }

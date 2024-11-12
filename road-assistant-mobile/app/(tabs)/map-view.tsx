@@ -1,53 +1,78 @@
 import { getImageByClass } from '@/constants/image.paths';
-import React, { useRef, useState } from 'react';
-import { FlatList, Image, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { CommentResponse, Coordinates, RouteReportResponse, RouteService, SignItem } from '@/service/Api';
+import * as Location from 'expo-location';
+import { useFocusEffect } from 'expo-router';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Alert, FlatList, Image, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import MapView, { Callout, Marker } from 'react-native-maps';
 
 const routesData = [
   {
-    routeId: 'route1',
+    id: 1,
+    createdAt: 'date',
     startPoint: { latitude: 51.524847, longitude: 33.382453 },
     endPoint: { latitude: 51.550630, longitude: 33.362599 },
-    markers: [
+    recognizedSigns: [
       {
-        latitude: 51.536192,
-        longitude: 33.358049,
-        image: getImageByClass(0),
+        coordinates: {
+          latitude: 51.536192,
+          longitude: 33.358049,
+        },
+        signClass: '0',
       },
       {
-        latitude: 51.547005,
-        longitude: 33.352258,
-        image: getImageByClass(1),
+        coordinates: {
+          latitude: 51.547005,
+          longitude: 33.352258,
+        },
+        signClass: '1',
       },
     ],
-    commentMarkers: [
+    comments: [
       {
-        latitude: 51.540000,
-        longitude: 33.360000,
+        id: 1,
+        createdAt: 'date',
+        routeId: 1,
+        userId: '',
+        coordinates: {
+          latitude: 51.540000,
+          longitude: 33.360000,
+        },        
         text: 'Цей коментар для прикладу',
       },
     ],
   },
   {
-    routeId: 'route2',
+    id: 2,
+    createdAt: 'date2',
     startPoint: { latitude: 48.8566, longitude: 2.3522 },
     endPoint: { latitude: 48.8540, longitude: 2.3490 },
-    markers: [
+    recognizedSigns: [
       {
-        latitude: 48.8566,
-        longitude: 2.3522,
-        image: getImageByClass(5),
+        coordinates: {
+          latitude: 48.8566,
+          longitude: 2.3522,
+        },
+        signClass: '5',
       },
       {
-        latitude: 48.8550,
-        longitude: 2.3500,
-        image: getImageByClass(11),
+        coordinates: {
+          latitude: 48.8550,
+          longitude: 2.3500,
+        },
+        signClass: '11',
       },
     ],
-    commentMarkers: [
+    comments: [
       {
-        latitude: 48.8560,
-        longitude: 2.3510,
+        id: 2,
+        createdAt: 'date',
+        routeId: 1,
+        userId: '',
+        coordinates: {
+          latitude: 48.8560,
+          longitude: 2.3510,
+        },
         text: 'Ще один приклад коментаря',
       },
     ],
@@ -68,20 +93,64 @@ export interface CommentMarker extends Coords {
 }
 
 export interface RouteData {
-  routeId: string;
-  startPoint: Coords;
-  endPoint: Coords;
-  markers: Array<Marker>;
-  commentMarkers?: Array<CommentMarker>;
+  id: number;
+  createdAt: string;
+  startPoint: Coordinates;
+  endPoint: Coordinates;
+  recognizedSigns: Array<SignItem>;
+  comments: Array<CommentResponse>;
 }
 
 export default function MapScreen() {
+  const [location, setLocation] = useState<Location.LocationObject>();
+  const [locationPermission, requestLocationPermission] = Location.useForegroundPermissions();
   const [selectedRoute, setSelectedRoute] = useState<RouteData>();
   const [searchQuery, setSearchQuery] = useState('');
   const mapRef = useRef<MapView>(null);
+  const [routesData, setRoutesData] = useState<Array<RouteReportResponse>>([])
 
-  const handleSelectRoute = (routeId: string) => {
-    const route = routesData.find((r) => r.routeId === routeId);
+  useEffect(() => {
+    (async () => {
+      if (!locationPermission) {
+        const { status } = await requestLocationPermission();
+        if (status !== 'granted') {
+          Alert.alert('Permission denied', 'Location permission is required to use this feature.');
+        } else {
+          Location.watchPositionAsync({ accuracy: Location.Accuracy.High }, setLocation);
+        }
+      }
+
+      const routes = await RouteService.getRoutesForUser();
+      setRoutesData(routes);
+    })();
+  }, []);
+
+  useEffect(() => {
+    if (location && mapRef.current) {
+      mapRef.current.animateToRegion(
+        {
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        },
+        1000
+      );
+    }
+  }, [location]);
+
+  useFocusEffect(
+    useCallback(() => {
+      const fetchRoutes = async () => {
+        const routes = await RouteService.getRoutesForUser();
+        setRoutesData(routes);
+      };
+      fetchRoutes();
+    }, [])
+  )
+
+  const handleSelectRoute = (routeId: number) => {
+    const route = routesData.find((r) => r.id === routeId);
     setSelectedRoute(route);
 
     if (route && mapRef.current) {
@@ -97,7 +166,7 @@ export default function MapScreen() {
   };
 
   const filteredRoutes = routesData.filter(route =>
-    route.routeId.toLowerCase().includes(searchQuery.toLowerCase())
+    route.id.toString().toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -107,8 +176,8 @@ export default function MapScreen() {
           ref={mapRef}
           style={styles.map}
           initialRegion={{
-            latitude: 51.528390,
-            longitude: 33.395879,
+            latitude: location ? location.coords.latitude : 51.528390,
+            longitude: location ? location.coords.longitude : 33.395879,
             latitudeDelta: 0.01,
             longitudeDelta: 0.01,
           }}
@@ -127,24 +196,24 @@ export default function MapScreen() {
                 pinColor="red"
               />
 
-              {selectedRoute.markers.map((marker, index) => (
+              {selectedRoute.recognizedSigns.map((marker, index) => (
                 <Marker
                   key={index}
                   coordinate={{
-                    latitude: marker.latitude,
-                    longitude: marker.longitude,
+                    latitude: marker.coordinates.latitude,
+                    longitude: marker.coordinates.longitude,
                   }}
                 >
-                  <Image source={marker.image} style={styles.markerImage} />
+                  <Image source={getImageByClass(marker.signClass)} style={styles.markerImage} />
                 </Marker>
               ))}
 
-              {selectedRoute.commentMarkers?.map((comment, index) => (
+              {selectedRoute.comments.map((comment, index) => (
                 <Marker
                   key={`comment-${index}`}
                   coordinate={{
-                    latitude: comment.latitude,
-                    longitude: comment.longitude,
+                    latitude: comment.coordinates.latitude,
+                    longitude: comment.coordinates.longitude,
                   }}
                   pinColor='blue'
                 >
@@ -171,10 +240,10 @@ export default function MapScreen() {
         
         <FlatList
           data={filteredRoutes}
-          keyExtractor={(item) => item.routeId}
+          keyExtractor={(item) => `${item.id}-${new Date(item.createdAt).getDate()}`}
           renderItem={({ item }) => (
-            <TouchableOpacity onPress={() => handleSelectRoute(item.routeId)} style={styles.routeItem}>
-              <Text style={styles.routeText}>{item.routeId}</Text>
+            <TouchableOpacity onPress={() => handleSelectRoute(item.id)} style={styles.routeItem}>
+              <Text style={styles.routeText}>{item.id}) {item.createdAt}</Text>
             </TouchableOpacity>
           )}
           contentContainerStyle={styles.routeList}

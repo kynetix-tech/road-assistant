@@ -1,6 +1,6 @@
 export interface Coordinates {
   latitude: number;
-  longtitude: number;
+  longitude: number;
 }
 
 export interface SignItem {

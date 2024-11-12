@@ -4,6 +4,6 @@
 /* eslint-disable */
 export type Coordinates = {
     latitude: number;
-    longtitude: number;
+    longitude: number;
 };
 

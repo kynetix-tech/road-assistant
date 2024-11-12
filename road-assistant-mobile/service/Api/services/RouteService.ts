@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { RouteReportRequest } from '../models/RouteReportRequest';
+import type { RouteReportResponse } from '../models/RouteReportResponse';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
@@ -23,10 +24,10 @@ export class RouteService {
         });
     }
     /**
-     * @returns any
+     * @returns RouteReportResponse
      * @throws ApiError
      */
-    public static getRoutesForUser(): CancelablePromise<any> {
+    public static getRoutesForUser(): CancelablePromise<Array<RouteReportResponse>> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/route/routes',

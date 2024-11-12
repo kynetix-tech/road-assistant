@@ -1,7 +1,7 @@
 import ThemedButton from '@/components/ThemedButton';
 import { getImageByClass } from '@/constants/image.paths';
 import { loadModel, prepareSingleImageArr } from '@/lib/model-utils';
-import { CommentRequest } from '@/service/Api';
+import { CommentRequest, RouteReportRequest, RouteService, SignItem } from '@/service/Api';
 import * as tf from '@tensorflow/tfjs';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as Location from 'expo-location';
@@ -20,8 +20,9 @@ export default function RealTimeRecognitionScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [locationPermission, requestLocationPermission] = Location.useForegroundPermissions();
   const [location, setLocation] = useState<Location.LocationObject>();
+  const [startLocation, setStartLocation] = useState<Location.LocationObject>();
   const [isRecording, setIsRecording] = useState(false);
-  const [recognitionData, setRecognitionData] = useState<any[]>([]);
+  const [recognitionData, setRecognitionData] = useState<SignItem[]>([]);
   const [currentClass, setCurrentClass] = useState<number>();
   const [comments, setComments] = useState<CommentRequest[]>([]);
   const cameraRef = useRef<CameraView>(null);
@@ -64,6 +65,7 @@ export default function RealTimeRecognitionScreen() {
 
   const handleStartTrip = () => {
     setIsRecording(true);
+    setStartLocation(location);
     return async () => {
       const model = await loadModel();
       const interval = setInterval(async () => {
@@ -82,10 +84,11 @@ export default function RealTimeRecognitionScreen() {
             setRecognitionData((prev) => [
               ...prev,
               {
-                time: new Date().toISOString(),
-                class: detectedClass,
-                latitude: location.coords.latitude,
-                longitude: location.coords.longitude,
+                signClass: detectedClass.toString(),
+                coordinates: {
+                  latitude: location.coords.latitude,
+                  longitude: location.coords.longitude,
+                }
               },
             ]);
           }
@@ -98,38 +101,43 @@ export default function RealTimeRecognitionScreen() {
 
   const handleEndTrip = async () => {
     setIsRecording(false);
-    sendDataToBackend(recognitionData);
+    const uploadData = {
+      startPoint: {
+        latitude: startLocation?.coords.latitude || 0,
+        longitude: startLocation?.coords.longitude || 0,
+      },
+      endPoint: {
+        latitude: location?.coords.latitude || 0,
+        longitude: location?.coords.longitude || 0,
+      },
+      recognizedSigns: recognitionData,
+      comments
+    }
+
+    sendDataToBackend(uploadData);
     setRecognitionData([]);
+
     const currentLocation = await Location.getCurrentPositionAsync({});
     console.log(currentLocation)
   };
 
-  const sendDataToBackend = async (data: any) => {
-    return;
-    await fetch('https://your-backend-api.com/recognition-data', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
+  const sendDataToBackend = (data: RouteReportRequest) => async () => {
+    await RouteService.addNewReport(data);
   };
 
   useEffect(() => {
-    // Починаємо отримувати дані з акселерометра
     const accelSubscription = Accelerometer.addListener(data => {
       setAccelData(data);
       detectHarshManeuver(data, gyroData);
     });
-    // Починаємо отримувати дані з гіроскопа
     const gyroSubscription = Gyroscope.addListener(data => {
       setGyroData(data);
       detectHarshManeuver(accelData, data);
     });
 
-    // Частота оновлення сенсорів
     Accelerometer.setUpdateInterval(100); // 100 ms
     Gyroscope.setUpdateInterval(100); // 100 ms
 
-    // Очищаємо підписку при виході з екрану
     return () => {
       accelSubscription.remove();
       gyroSubscription.remove();
@@ -141,9 +149,8 @@ export default function RealTimeRecognitionScreen() {
     const accelMagnitude = Math.sqrt(accel.x ** 2 + accel.y ** 2 + accel.z ** 2);
     const gyroMagnitude = Math.sqrt(gyro.x ** 2 + gyro.y ** 2 + gyro.z ** 2);
 
-    // Порогові значення для різких маневрів
-    const ACCEL_THRESHOLD = 2.3; // наприклад, 2g
-    const GYRO_THRESHOLD = 5.5; // залежить від потрібної чутливості
+    const ACCEL_THRESHOLD = 2.3; // 2.3g
+    const GYRO_THRESHOLD = 5.5;
 
     if (accelMagnitude > ACCEL_THRESHOLD) {
       setMovementDescription("Різке прискорення або гальмування");
