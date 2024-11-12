@@ -1,12 +1,14 @@
 import ThemedButton from '@/components/ThemedButton';
 import { getImageByClass } from '@/constants/image.paths';
 import { loadModel, prepareSingleImageArr } from '@/lib/model-utils';
+import { CommentRequest } from '@/service/Api';
 import * as tf from '@tensorflow/tfjs';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as Location from 'expo-location';
 import { Accelerometer, Gyroscope } from 'expo-sensors';
 import { useEffect, useRef, useState } from 'react';
 import { Alert, Button, Image, StyleSheet, Text, View } from 'react-native';
+import Dialog from 'react-native-dialog';
 
 export interface AccelGyroData {
   x: number;
@@ -21,7 +23,11 @@ export default function RealTimeRecognitionScreen() {
   const [isRecording, setIsRecording] = useState(false);
   const [recognitionData, setRecognitionData] = useState<any[]>([]);
   const [currentClass, setCurrentClass] = useState<number>();
+  const [comments, setComments] = useState<CommentRequest[]>([]);
   const cameraRef = useRef<CameraView>(null);
+
+  const [dialogVisible, setDialogVisible] = useState(false);
+  const [commentText, setCommentText] = useState("");
   
   const [accelData, setAccelData] = useState<AccelGyroData>({ x: 0, y: 0, z: 0 });
   const [gyroData, setGyroData] = useState<AccelGyroData>({ x: 0, y: 0, z: 0 });
@@ -39,6 +45,22 @@ export default function RealTimeRecognitionScreen() {
       }
     })();
   }, []);
+
+  const handleAddComment = async () => {
+    const currentLocation = await Location.getCurrentPositionAsync({});
+    setComments(prev => [
+      ...prev,
+      {
+        text: commentText,
+        coordinates: {
+          latitude: currentLocation.coords.latitude,
+          longitude: currentLocation.coords.longitude
+        }
+      } as any
+    ]);
+    setCommentText(""); // Очищення поля введення
+    setDialogVisible(false); // Закриття діалогу
+  };
 
   const handleStartTrip = () => {
     setIsRecording(true);
@@ -168,6 +190,20 @@ export default function RealTimeRecognitionScreen() {
         <Text>Акселерометр - x: {accelData.x.toFixed(2)} y: {accelData.y.toFixed(2)} z: {accelData.z.toFixed(2)}</Text>
         <Text>Гіроскоп - x: {gyroData.x.toFixed(2)} y: {gyroData.y.toFixed(2)} z: {gyroData.z.toFixed(2)}</Text>
       </View>
+      <View style={styles.buttonContainer}>
+        <ThemedButton onPress={() => setDialogVisible(true)} title={'Додати нотатку'} />
+      </View>
+      <Dialog.Container visible={dialogVisible}>
+        <Dialog.Title>Додати нотатку</Dialog.Title>
+        <Dialog.Input
+          label="Що би ви хотіли занотувати за даною локацією?"
+          placeholder="Введіть текст..."
+          value={commentText}
+          onChangeText={setCommentText}
+        />
+        <Dialog.Button label="Скасувати" onPress={() => setDialogVisible(false)} />
+        <Dialog.Button label="Додати" onPress={handleAddComment} />
+      </Dialog.Container>
     </View>
   );
 }
@@ -204,7 +240,6 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: 'column',
     justifyContent: 'space-between',
-    paddingVertical: 20,
     alignItems: 'center'
   },
   monitorContainer: {
@@ -214,6 +249,5 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 20,
   }
 });

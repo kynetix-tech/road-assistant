@@ -2,35 +2,34 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { UserRegisterRequest } from '../models/UserRegisterRequest';
-import type { UserResponse } from '../models/UserResponse';
+import type { RouteReportRequest } from '../models/RouteReportRequest';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
-export class UsersService {
+export class RouteService {
     /**
      * @param requestBody
-     * @returns UserResponse
+     * @returns any
      * @throws ApiError
      */
-    public static upsert(
-        requestBody: UserRegisterRequest,
-    ): CancelablePromise<UserResponse> {
+    public static addNewReport(
+        requestBody: RouteReportRequest,
+    ): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'POST',
-            url: '/user/upsert',
+            url: '/route/route-report',
             body: requestBody,
             mediaType: 'application/json',
         });
     }
     /**
-     * @returns UserResponse
+     * @returns any
      * @throws ApiError
      */
-    public static getCurrentUser(): CancelablePromise<UserResponse> {
+    public static getRoutesForUser(): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/user/current',
+            url: '/route/routes',
         });
     }
 }
