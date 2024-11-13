@@ -28,7 +28,7 @@ export default function TabLayout() {
         options={{
           title: 'Тест відео',
           tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'code-slash' : 'code-slash-outline'} color={color} />
+            <TabBarIcon name={focused ? 'archive' : 'archive-outline'} color={color} />
           ),
         }}
       />

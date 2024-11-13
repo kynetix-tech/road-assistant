@@ -59,8 +59,8 @@ export default function RealTimeRecognitionScreen() {
         }
       } as any
     ]);
-    setCommentText(""); // Очищення поля введення
-    setDialogVisible(false); // Закриття діалогу
+    setCommentText("");
+    setDialogVisible(false);
   };
 
   const handleStartTrip = () => {
@@ -198,7 +198,7 @@ export default function RealTimeRecognitionScreen() {
         <Text>Гіроскоп - x: {gyroData.x.toFixed(2)} y: {gyroData.y.toFixed(2)} z: {gyroData.z.toFixed(2)}</Text>
       </View>
       <View style={styles.buttonContainer}>
-        <ThemedButton onPress={() => setDialogVisible(true)} title={'Додати нотатку'} />
+        <ThemedButton onPress={() => isRecording ? setDialogVisible(true) : setDialogVisible(false)} title={'Додати нотатку'} />
       </View>
       <Dialog.Container visible={dialogVisible}>
         <Dialog.Title>Додати нотатку</Dialog.Title>

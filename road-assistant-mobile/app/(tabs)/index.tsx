@@ -4,7 +4,7 @@ import { useApiTokenResolver } from '@/hooks/useApiTokenResolver';
 import { UsersService } from '@/service/Api';
 import { Picker } from '@react-native-picker/picker';
 import React, { useEffect, useState } from 'react';
-import { Alert, Keyboard, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Image, Keyboard, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Auth0Provider, useAuth0 } from 'react-native-auth0';
 
 const Home = () => {
@@ -88,7 +88,7 @@ const Home = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>RSD</Text>
+      <Image source={require('@/assets/images/logov2.png')} style={styles.logoImg}/>
       {!user && <Text>Ви не авторизовані, увійдіть або зареєструйтесь будь ласка</Text>}
       {error && <Text>{error.message}</Text>}
 
@@ -190,15 +190,18 @@ const styles = StyleSheet.create({
   divider: {
     height: 1,
     backgroundColor: 'gray',
-    marginVertical: 20,
   },
   statsHeader: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 10,
   },
   centeredContainer: {
     display: 'flex',
     alignItems: 'center'
+  },
+  logoImg: {
+    marginTop: 30,
+    height: 110,
+    width: 110
   }
 });
