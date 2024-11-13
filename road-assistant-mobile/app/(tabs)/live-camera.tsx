@@ -1,3 +1,4 @@
+import UnauthorizedScreen from '@/components/NotAuthorized';
 import ThemedButton from '@/components/ThemedButton';
 import { EARTH_RADIUS, LOCATION_TRESHOLD, MODEL_TRESHOLD } from '@/constants/common';
 import { getImageByClass } from '@/constants/image.paths';
@@ -9,6 +10,7 @@ import * as Location from 'expo-location';
 import { Accelerometer, Gyroscope } from 'expo-sensors';
 import { useEffect, useRef, useState } from 'react';
 import { Alert, Button, Image, StyleSheet, Text, View } from 'react-native';
+import { useAuth0 } from 'react-native-auth0';
 import Dialog from 'react-native-dialog';
 
 export interface AccelGyroData {
@@ -27,6 +29,7 @@ export default function RealTimeRecognitionScreen() {
   const [currentClass, setCurrentClass] = useState<number>();
   const [comments, setComments] = useState<CommentRequest[]>([]);
   const cameraRef = useRef<CameraView>(null);
+  const { user } = useAuth0();
 
   const [dialogVisible, setDialogVisible] = useState(false);
   const [commentText, setCommentText] = useState("");
@@ -199,6 +202,10 @@ export default function RealTimeRecognitionScreen() {
       setMovementDescription("Різкий поворот");
       setTimeout(() => setMovementDescription("Спокійний рух"), 2000)
     }
+  }
+
+  if(!user) {
+    return <UnauthorizedScreen />
   }
 
   if (!permission) {

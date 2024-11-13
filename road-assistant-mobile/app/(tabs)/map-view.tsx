@@ -1,114 +1,22 @@
+import UnauthorizedScreen from '@/components/NotAuthorized';
 import { getImageByClass } from '@/constants/image.paths';
 import { getPrettyDateString } from '@/lib/date-utils';
-import { CommentResponse, Coordinates, RouteReportResponse, RouteService, SignItem } from '@/service/Api';
+import { RouteReportResponse, RouteService } from '@/service/Api';
 import * as Location from 'expo-location';
 import { useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, FlatList, Image, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useAuth0 } from 'react-native-auth0';
 import MapView, { Callout, Marker } from 'react-native-maps';
-
-const routesData = [
-  {
-    id: 1,
-    createdAt: 'date',
-    startPoint: { latitude: 51.524847, longitude: 33.382453 },
-    endPoint: { latitude: 51.550630, longitude: 33.362599 },
-    recognizedSigns: [
-      {
-        coordinates: {
-          latitude: 51.536192,
-          longitude: 33.358049,
-        },
-        signClass: '0',
-      },
-      {
-        coordinates: {
-          latitude: 51.547005,
-          longitude: 33.352258,
-        },
-        signClass: '1',
-      },
-    ],
-    comments: [
-      {
-        id: 1,
-        createdAt: 'date',
-        routeId: 1,
-        userId: '',
-        coordinates: {
-          latitude: 51.540000,
-          longitude: 33.360000,
-        },        
-        text: 'Цей коментар для прикладу',
-      },
-    ],
-  },
-  {
-    id: 2,
-    createdAt: 'date2',
-    startPoint: { latitude: 48.8566, longitude: 2.3522 },
-    endPoint: { latitude: 48.8540, longitude: 2.3490 },
-    recognizedSigns: [
-      {
-        coordinates: {
-          latitude: 48.8566,
-          longitude: 2.3522,
-        },
-        signClass: '5',
-      },
-      {
-        coordinates: {
-          latitude: 48.8550,
-          longitude: 2.3500,
-        },
-        signClass: '11',
-      },
-    ],
-    comments: [
-      {
-        id: 2,
-        createdAt: 'date',
-        routeId: 1,
-        userId: '',
-        coordinates: {
-          latitude: 48.8560,
-          longitude: 2.3510,
-        },
-        text: 'Ще один приклад коментаря',
-      },
-    ],
-  },
-];
-
-export interface Coords {
-  latitude: number;
-  longitude: number;
-}
-
-export interface Marker extends Coords {
-  image: any;
-}
-
-export interface CommentMarker extends Coords {
-  text: string;
-}
-
-export interface RouteData {
-  id: number;
-  createdAt: string;
-  startPoint: Coordinates;
-  endPoint: Coordinates;
-  recognizedSigns: Array<SignItem>;
-  comments: Array<CommentResponse>;
-}
 
 export default function MapScreen() {
   const [location, setLocation] = useState<Location.LocationObject>();
   const [locationPermission, requestLocationPermission] = Location.useForegroundPermissions();
-  const [selectedRoute, setSelectedRoute] = useState<RouteData>();
+  const [selectedRoute, setSelectedRoute] = useState<RouteReportResponse>();
   const [searchQuery, setSearchQuery] = useState('');
   const mapRef = useRef<MapView>(null);
   const [routesData, setRoutesData] = useState<Array<RouteReportResponse>>([])
+  const { user } = useAuth0();
 
   useEffect(() => {
     (async () => {
@@ -121,8 +29,10 @@ export default function MapScreen() {
         }
       }
 
-      const routes = await RouteService.getRoutesForUser();
-      setRoutesData(routes);
+      if (user) {
+        const routes = await RouteService.getRoutesForUser();
+        setRoutesData(routes);
+      }
     })();
   }, []);
 
@@ -146,8 +56,10 @@ export default function MapScreen() {
         const routes = await RouteService.getRoutesForUser();
         setRoutesData(routes);
       };
-      fetchRoutes();
-    }, [])
+      if (user) {
+        fetchRoutes();
+      }
+    }, [user])
   )
 
   const handleSelectRoute = (routeId: number) => {
@@ -169,6 +81,10 @@ export default function MapScreen() {
   const filteredRoutes = routesData.filter(route =>
     getPrettyDateString(route.createdAt).toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  if(!user) {
+    return <UnauthorizedScreen />
+  }
 
   return (
     <View style={styles.container}>
@@ -218,8 +134,8 @@ export default function MapScreen() {
                   }}
                   pinColor='blue'
                 >
-                  <Callout>
-                    <Text>{comment.text}</Text>
+                  <Callout style={{ minWidth: 100, maxWidth: 300}}>
+                    <Text style={{ fontSize: 10, color: 'black' }}>{comment.text}</Text>
                   </Callout>
                 </Marker>
               ))}
@@ -242,9 +158,9 @@ export default function MapScreen() {
         <FlatList
           data={filteredRoutes.sort((r1, r2) => r1.id - r2.id)}
           keyExtractor={(item) => `${item.id}-${new Date(item.createdAt).getDate()}`}
-          renderItem={({ item }) => (
+          renderItem={({ item, index }) => (
             <TouchableOpacity onPress={() => handleSelectRoute(item.id)} style={styles.routeItem}>
-              <Text style={styles.routeText}>{item.id}) {getPrettyDateString(item.createdAt)}</Text>
+              <Text style={styles.routeText}>{index + 1}) {getPrettyDateString(item.createdAt)}</Text>
             </TouchableOpacity>
           )}
           contentContainerStyle={styles.routeList}

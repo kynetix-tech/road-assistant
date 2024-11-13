@@ -5,7 +5,7 @@ import { UsersService } from '@/service/Api';
 import { Picker } from '@react-native-picker/picker';
 import React, { useEffect, useState } from 'react';
 import { Alert, Image, Keyboard, StyleSheet, Text, TextInput, View } from 'react-native';
-import { Auth0Provider, useAuth0 } from 'react-native-auth0';
+import { useAuth0 } from 'react-native-auth0';
 
 const Home = () => {
   useApiTokenResolver();
@@ -57,6 +57,7 @@ const Home = () => {
       setRecognizedSigns(userData.rating.recognizedSigns);
       setCommentsAdded(userData.rating.addedComments);
     } catch (error) {
+      Alert.alert('Увага!', 'Ваших немає даних в базі даних застосунку, \nвнесіть їх та натисніть "Зберегти зміни"');
       console.log("Користувач не знайдений або сталася помилка:", error);
     }
   };
@@ -149,9 +150,7 @@ const Home = () => {
 
 export default function HomeScreen() {
   return (
-    <Auth0Provider domain={config.domain} clientId={config.clientId}>
-      <Home />
-    </Auth0Provider>
+    <Home />
   );
 }
 
