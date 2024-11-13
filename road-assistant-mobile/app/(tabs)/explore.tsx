@@ -1,5 +1,6 @@
 import { getPresetForResult } from '@/assets/presets/preset.rs';
 import ThemedButton from '@/components/ThemedButton';
+import { MODEL_TRESHOLD } from '@/constants/common';
 import { getImageByClass, ResultItem } from '@/constants/image.paths';
 import { loadModel, prepareSingleImageArr } from '@/lib/model-utils';
 import * as tf from '@tensorflow/tfjs';
@@ -35,11 +36,15 @@ export default function ExploreScreen() {
         const prediction = model.predict(preparedImage) as tf.Tensor;
         const predictionData = await prediction.data();
 
-        const detectedClass = predictionData.indexOf(Math.max(...predictionData));
-        results.push({
-          time: currentTime / 1000,
-          label: `${detectedClass}`,
-        });
+        const maxProbability = Math.max(...predictionData);
+        const detectedClass = predictionData.indexOf(maxProbability);
+        
+        if (maxProbability > MODEL_TRESHOLD) {
+          results.push({
+            time: currentTime / 1000,
+            label: `${detectedClass}`,
+          }); 
+        }
       }
 
       setProcessingResults(getPresetForResult(results));

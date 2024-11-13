@@ -1,4 +1,5 @@
 import ThemedButton from '@/components/ThemedButton';
+import { EARTH_RADIUS, LOCATION_TRESHOLD, MODEL_TRESHOLD } from '@/constants/common';
 import { getImageByClass } from '@/constants/image.paths';
 import { loadModel, prepareSingleImageArr } from '@/lib/model-utils';
 import { CommentRequest, RouteReportRequest, RouteService, SignItem } from '@/service/Api';
@@ -66,6 +67,9 @@ export default function RealTimeRecognitionScreen() {
   const handleStartTrip = () => {
     setIsRecording(true);
     setStartLocation(location);
+    let lastDetectedClass: number;
+    let lastDetectedLocation: Location.LocationObjectCoords;
+  
     return async () => {
       const model = await loadModel();
       const interval = setInterval(async () => {
@@ -75,29 +79,65 @@ export default function RealTimeRecognitionScreen() {
           const prediction = model.predict(preparedImage) as tf.Tensor;
           const predictionData = await prediction.data();
   
-          const detectedClass = predictionData.indexOf(Math.max(...predictionData));
-          const currentLocation = await Location.getCurrentPositionAsync({});
-          setLocation(currentLocation);
-          setCurrentClass(detectedClass);
-          
-          if (location) {
-            setRecognitionData((prev) => [
-              ...prev,
-              {
-                signClass: detectedClass.toString(),
-                coordinates: {
-                  latitude: location.coords.latitude,
-                  longitude: location.coords.longitude,
+          const maxProbability = Math.max(...predictionData);
+          const detectedClass = predictionData.indexOf(maxProbability);
+  
+          // Поріг достовірності
+          if (maxProbability > MODEL_TRESHOLD) {
+            const currentLocation = await Location.getCurrentPositionAsync({});
+            setLocation(currentLocation);
+            setCurrentClass(detectedClass);
+  
+            const isSameClass = lastDetectedClass === detectedClass;
+            const isNearby = lastDetectedLocation
+              ? getDistance(
+                  lastDetectedLocation,
+                  currentLocation.coords
+                ) < LOCATION_TRESHOLD
+              : false;
+  
+            if (!(isSameClass && isNearby)) {
+              setRecognitionData((prev) => [
+                ...prev,
+                {
+                  signClass: detectedClass.toString(),
+                  coordinates: {
+                    latitude: currentLocation.coords.latitude,
+                    longitude: currentLocation.coords.longitude,
+                  }
                 }
-              },
-            ]);
+              ]);
+  
+              lastDetectedClass = detectedClass;
+              lastDetectedLocation = currentLocation.coords;
+            }
           }
         }
       }, 2000);
   
       return () => clearInterval(interval);
     };
-  } 
+  };
+  
+  const getDistance = (
+    coords1: Location.LocationObjectCoords, 
+    coords2: Location.LocationObjectCoords
+  ) => {
+    const lat1 = coords1.latitude * (Math.PI / 180);
+    const lat2 = coords2.latitude * (Math.PI / 180);
+    const deltaLat = (coords2.latitude - coords1.latitude) * (Math.PI / 180);
+    const deltaLon = (coords2.longitude - coords1.longitude) * (Math.PI / 180);
+  
+    const a =
+      Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
+      Math.cos(lat1) * Math.cos(lat2) *
+      Math.sin(deltaLon / 2) * Math.sin(deltaLon / 2);
+  
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  
+    return EARTH_RADIUS * c;
+  };
+  
 
   const handleEndTrip = async () => {
     setIsRecording(false);
@@ -179,7 +219,7 @@ export default function RealTimeRecognitionScreen() {
       <CameraView style={styles.camera} facing="back">
         <View style={styles.overlay}>
           {currentClass === undefined ? 
-          <></> : 
+          <Image source={require('@/assets/images/empty.png')}/> : 
           <Image source={getImageByClass(currentClass)} style={styles.image} resizeMode="contain" />}
         </View>
       </CameraView>
@@ -227,7 +267,7 @@ const styles = StyleSheet.create({
   },
   camera: {
     width: '90%',
-    height: 400,
+    aspectRatio: 3 / 4,
     marginTop: 20,
     alignSelf: 'center',
   },
