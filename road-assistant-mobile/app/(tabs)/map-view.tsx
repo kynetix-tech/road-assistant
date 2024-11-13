@@ -1,4 +1,5 @@
 import { getImageByClass } from '@/constants/image.paths';
+import { getPrettyDateString } from '@/lib/date-utils';
 import { CommentResponse, Coordinates, RouteReportResponse, RouteService, SignItem } from '@/service/Api';
 import * as Location from 'expo-location';
 import { useFocusEffect } from 'expo-router';
@@ -166,7 +167,7 @@ export default function MapScreen() {
   };
 
   const filteredRoutes = routesData.filter(route =>
-    route.id.toString().toLowerCase().includes(searchQuery.toLowerCase())
+    getPrettyDateString(route.createdAt).toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -239,11 +240,11 @@ export default function MapScreen() {
         />
         
         <FlatList
-          data={filteredRoutes}
+          data={filteredRoutes.sort((r1, r2) => r1.id - r2.id)}
           keyExtractor={(item) => `${item.id}-${new Date(item.createdAt).getDate()}`}
           renderItem={({ item }) => (
             <TouchableOpacity onPress={() => handleSelectRoute(item.id)} style={styles.routeItem}>
-              <Text style={styles.routeText}>{item.id}) {item.createdAt}</Text>
+              <Text style={styles.routeText}>{item.id}) {getPrettyDateString(item.createdAt)}</Text>
             </TouchableOpacity>
           )}
           contentContainerStyle={styles.routeList}
