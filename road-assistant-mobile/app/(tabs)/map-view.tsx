@@ -7,7 +7,7 @@ import { useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, FlatList, Image, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useAuth0 } from 'react-native-auth0';
-import MapView, { Callout, Marker } from 'react-native-maps';
+import MapView, { Callout, Marker, Polyline } from 'react-native-maps';
 
 export default function MapScreen() {
   const [location, setLocation] = useState<Location.LocationObject>();
@@ -78,6 +78,14 @@ export default function MapScreen() {
     }
   };
 
+  const routeCoordinates = selectedRoute
+    ? [
+        selectedRoute.startPoint,
+        ...selectedRoute.recognizedSigns.map((marker) => marker.coordinates),
+        selectedRoute.endPoint,
+      ]
+    : [];
+
   const filteredRoutes = routesData.filter(route =>
     getPrettyDateString(route.createdAt).toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -139,6 +147,12 @@ export default function MapScreen() {
                   </Callout>
                 </Marker>
               ))}
+
+              <Polyline
+                coordinates={routeCoordinates}
+                strokeColor="#0000FF" // Синій колір лінії
+                strokeWidth={2}
+              />
             </>
           )}
         </MapView>
