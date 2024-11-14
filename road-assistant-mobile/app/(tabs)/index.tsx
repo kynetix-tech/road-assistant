@@ -3,7 +3,8 @@ import config from '@/config/auth0-config';
 import { useApiTokenResolver } from '@/hooks/useApiTokenResolver';
 import { UsersService } from '@/service/Api';
 import { Picker } from '@react-native-picker/picker';
-import React, { useEffect, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, Image, Keyboard, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useAuth0 } from 'react-native-auth0';
 
@@ -23,6 +24,17 @@ const Home = () => {
       loadUserData()
     }
   }, [user]);
+
+  useFocusEffect(
+    useCallback(() => {
+      const fetchuserData = async () => {
+        await loadUserData()
+      };
+      if (user) {
+        fetchuserData();
+      }
+    }, [user])
+  )
 
   const onLogin = async () => {
     try {
