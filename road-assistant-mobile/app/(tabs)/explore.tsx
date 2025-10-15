@@ -17,7 +17,7 @@ export default function ExploreScreen() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentImage, setCurrentImage] = useState(null);
   const videoRef = useRef<Video>(null);
-  const frameSkip = 5000;
+  const frameSkip = 500;
 
   const processVideoMulticlass = () => async () => {
     setIsProcessing(true);

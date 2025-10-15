@@ -116,7 +116,7 @@ export default function RealTimeRecognitionScreen() {
             }
           }
         }
-      }, 2000);
+      }, 500);
   
       return () => clearInterval(interval);
     };
